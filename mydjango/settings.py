@@ -48,12 +48,12 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware', #这里是新增的中间件
     'django.middleware.common.CommonMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #加载自定义中间件   文件夹名.文件名.类名
-    #'myapp.views.MyMiddleware'
+    # 加载自定义中间件   文件夹名.文件名.类名
+    # 'myapp.views.MyMiddleware'
 ]
 
 ROOT_URLCONF = 'mydjango.urls'
@@ -61,7 +61,7 @@ ROOT_URLCONF = 'mydjango.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        #添加模板文件夹路径
+        # 添加模板文件夹路径
         'DIRS': [os.path.join(BASE_DIR,'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -83,14 +83,14 @@ WSGI_APPLICATION = 'mydjango.wsgi.application'
 
 DATABASES = {
    'default': {
-          'ENGINE': 'django.db.backends.mysql', #数据库引擎
-          'NAME': 'md',                       #数据库名
-          'USER': 'root',                       #用户名
-          'PASSWORD': 'root',                   #密码
-          'HOST': '',                           #数据库主机，默认为localhost
-          'PORT': '',                           #数据库端口，MySQL默认为3306
+          'ENGINE': 'django.db.backends.mysql', # 数据库引擎
+          'NAME': 'mdshop',                         # 数据库名
+          'USER': 'root',                       # 用户名
+          'PASSWORD': '',                       # 密码
+          'HOST': '',                           # 数据库主机，默认为localhost
+          'PORT': '',                           # 数据库端口，MySQL默认为3306
           'OPTIONS': {
-             'autocommit': True,
+             'autocommit': True,                # 自动提交事务
          }
     }
 }
@@ -129,7 +129,7 @@ USE_L10N = True
 USE_TZ = True
 
 
-#设置跨域
+# 设置跨域
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -140,5 +140,5 @@ STATICFILES_DIRS=[
      os.path.join(BASE_DIR,'static')
 ]
 
-#定义上传文件夹的路径
+# 定义上传文件夹的路径
 UPLOAD_ROOT = os.path.join(BASE_DIR,'static/upload')

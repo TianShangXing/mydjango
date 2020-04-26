@@ -26,6 +26,7 @@ import random
 # 文件流
 import io
 
+# 发请求库
 import requests
 
 # 导入上传文件夹配置
@@ -36,9 +37,6 @@ import os
 from django.db import connection
 
 import jwt
-
-# 导入redis数据库
-import redis
 
 # 导入时间模块
 import time
@@ -52,6 +50,97 @@ from django.db.models import Q,F
 # 导入dwebsocket的库
 from dwebsocket.decorators import accept_websocket
 import uuid
+
+# 导入redis数据库
+import redis
+
+# 定义ip和端口
+host = 'localhost'
+port = 6379
+
+# 建立链接
+r = redis.Redis(host=host, port=port)
+
+# 自定义图片验证码
+class MyCode(View):
+	# 定义RGB随机颜色
+	def get_random_color(self):
+		R = random.randrange(255)
+		G = random.randrange(255)
+		B = random.randrange(255)
+
+		return(R, G, B)
+
+	# 定义图片视图
+	def get(self, request):
+		# 画布
+		img_size = (120, 50)
+		# 定义图片对象
+		image = Image.new('RGB', img_size, 'white')
+		# 定义画笔
+		draw = ImageDraw.Draw(image, 'RGB')
+		# 定义内容
+		source = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+		# 接收容器
+		code_str = ''
+		# 进入循环绘制
+		for i in range(4):
+			# 获取字体颜色
+			text_color = self.get_random_color()
+			# 获取随机下标
+			tmp_num = random.randrange(len(source))
+			# 随机字符串
+			random_str = source[tmp_num]
+			# 装入容器中
+			code_str += random_str
+			# 绘制字符串   坐标(x, y)     随机字符串   字体颜色
+			draw.text((10 + 30 * i, 20), random_str, text_color)
+		
+		# 获取缓冲区
+		buf = io.BytesIO()
+		# 将临时图片保存到缓冲区
+		image.save(buf, 'png')
+		# 保存随机码
+		r.set('code', code_str)
+
+		#保存session
+		request.session['code'] = code_str
+
+		print(r.get('code'))
+
+		return HttpResponse(buf.getvalue(), 'image/png')
+
+
+
+# 登录接口
+class Login(APIView):
+	def get(self, request):
+		# 接收参数
+		username = request.GET.get('username', None)
+		password = request.GET.get('password', None)
+		code = request.GET.get('code',None)
+
+		# 比对验证码
+		redis_code = r.get("code")
+		# 转码 str(redis_code,'utf-8')
+		redis_code = redis_code.decode("utf-8")
+
+		# 从session取值
+		session_code = request.session.get('code',None)
+
+		print(session_code)
+
+		if code != redis_code:
+			return Response({'code':403,'message':'您输入的验证码有误'})
+
+		# 查询数据 .get：查询不到报错 .filter：全表搜索，性能较慢
+		user = User.objects.filter(username=username, password=make_password(password)).first()
+
+		if user:
+			return Response({'code': 200, 'message': '登陆成功', 'uid': user.id, 'username': user.username})
+
+		else:
+			return Response({'code':403, 'message': '用户名或密码错误'})
 
 # md5加密方法
 def make_password(mypass):

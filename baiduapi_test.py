@@ -31,8 +31,9 @@ temp_data = urllib.parse.urlencode(temp_data)
 # 请求视图接口
 res = requests.post(url=url, data=temp_data, headers=myheaders)
 
-code = res.json()['words_result'][0]['words']
+code = res.json()['words_result']
 
-code = str(code).replace(' ','')
+for i in code:
+    code = i['words']
 
-print(code)
+    print(code)

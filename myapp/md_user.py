@@ -61,6 +61,93 @@ port = 6379
 # 建立链接
 r = redis.Redis(host=host, port=port)
 
+# 文件上传通用类
+class UploadFile(APIView):
+	# get 超出文件限制报错
+	def post(self, request):
+		# 接收参数
+		myfile = request.FILES.get('file')
+
+		# 建立文件流对象 定义写文件路径
+		f = open(os.path.join(UPLOAD_ROOT, '', myfile.name.replace('"', '')), 'wb')
+
+		# 写入
+		for chunk in myfile.chunks():
+			f.write(chunk)
+		f.close()
+
+		# 打开图片
+		im = Image.open(myfile)
+
+        # 生成画笔对象
+		draw = ImageDraw.Draw(im)
+
+        # 设置字体
+		my_font = ImageFont.truetype('c:\\Windows\\Fonts\\BAUHS93.TTF', size=50)
+
+		# 修改图片
+		draw.text((500, 500), 'Xing', font=my_font ,fill=(76, 234, 124, 180))
+
+		# 定义存储路径
+		storagepath='./static/upload/'+myfile.name
+
+		im.save(storagepath)
+
+		return Response({'filename': myfile.name.replace('"', '')})
+
+# 钉钉回调方法
+import hmac
+import base64
+from hashlib import sha256
+import urllib
+
+def ding_back(request):
+    #获取code
+    code = request.GET.get("code")
+
+    t = time.time()
+
+    # 时间戳
+    timestamp = str((int(round(t * 1000))))
+    appSecret ='fp3nkGoIhS2Mi9EdVql_nKXg6Y0-HSGp-2F_p7IAv_Quc56yhhrinpqbcQRg3RqF'
+
+    # 构造签名
+    signature = base64.b64encode(hmac.new(appSecret.encode('utf-8'),timestamp.encode('utf-8'), digestmod=sha256).digest())
+
+    # 请求接口，换取钉钉用户名
+    payload = {'tmp_auth_code':code}
+    headers = {'Content-Type': 'application/json'}
+    res = requests.post('https://oapi.dingtalk.com/sns/getuserinfo_bycode?signature='+urllib.parse.quote(signature.decode("utf-8"))+"&timestamp="+timestamp+"&accessKey=dingoahmelrgy51wltnjzs",data=json.dumps(payload),headers=headers)
+
+    res_dict = json.loads(res.text)
+    print(res_dict)
+    # return HttpResponse(res.text)
+
+	# 判断是否为第一次钉钉登录
+    user = User.objects.filter(username=str(res_dict['user_info']['nick'])).first()
+
+    ding_id = ''
+    user_id = ''
+
+    if user:
+        # 代表曾经用过钉钉登录
+        ding_id = user.username
+        user_id = user.id
+
+    else:
+        # 代表首次登录，入库
+        user = User(username=str(res_dict['user_info']['nick']), password='')
+        # 保存入库
+        user.save()
+        
+        # 查询用户id
+        user = User.objects.filter(username=str(res_dict['user_info']['nick'])).first()
+        ding_id = str(res_dict['user_info']['nick'])
+        user_id = user.id
+    # 进行跳转
+    return redirect('http://localhost:8080?ding_id=' + str(ding_id) + '&uid=' + str(user_id))
+
+
 # 新浪微博回调方法
 def wb_back(request):
 	# 接收参数
@@ -118,13 +205,15 @@ class MyCode(View):
 	# 定义图片视图
 	def get(self, request):
 		# 画布
-		img_size = (120, 50)
+		img_size = (130, 60)
 		# 定义图片对象
-		image = Image.new('RGB', img_size, 'white')
+		image = Image.new('RGB', img_size, '#FFFFE0')
 		# 定义画笔
 		draw = ImageDraw.Draw(image, 'RGB')
 		# 定义内容
 		source = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+		# 定义字体
+		my_font = ImageFont.truetype(font="c:\\Windows\\Fonts\\comic.ttf", size=25)
 		# 接收容器
 		code_str = ''
 		# 进入循环绘制
@@ -138,7 +227,7 @@ class MyCode(View):
 			# 装入容器中
 			code_str += random_str
 			# 绘制字符串   坐标(x, y)     随机字符串   字体颜色
-			draw.text((10 + 30 * i, 20), random_str, text_color)
+			draw.text((10 + 30 * i, 10), random_str, text_color, font=my_font)
 		
 		# 获取缓冲区
 		buf = io.BytesIO()

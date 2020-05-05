@@ -61,12 +61,44 @@ port = 6379
 # 建立链接
 r = redis.Redis(host=host, port=port)
 
+# 又拍云上传
+import upyun
+# 定义文件上传类
+class UploadUp(View):
+	def post(self, request):
+
+		img = request.FILES.get('file')
+
+		up = upyun.UpYun('tianshangxing', username='xing', password='b08ubGvsykcJeVB1fop7vJ1CYBUFsiFr')
+
+		headers = { 'x-gmkerl-rotate': '180' }
+
+		for chunk in img.chunks():
+			res = up.put('..\\static\\upload\\人物男头01.jpg', chunk, checksum=True, headers=headers)
+
+		#返回结果
+		return HttpResponse(json.dumps({'filename':img.name}), content_type='application/json')
+
+# 七牛云token
+from qiniu import Auth
+
+class QiNiu(APIView):
+	def get(self, request):
+		# 声明认证对象            AK                                        SK
+		q = Auth('gne8IIvxIQPLlv5U6PoSHWi5RKbRWObzcfPU-zse', 'SePCg8HiTpN5_ugZ9uYhN0BxWWXzMWPC0KJ5GdcD')
+		# 获取token           空间名称
+		token = q.upload_token('xing3')
+		
+		return Response({'token': token})
+
 # 文件上传通用类
 class UploadFile(APIView):
 	# get 超出文件限制报错
 	def post(self, request):
 		# 接收参数
 		myfile = request.FILES.get('file')
+
+		uid = request.POST.get('uid', None)
 
 		# 建立文件流对象 定义写文件路径
 		f = open(os.path.join(UPLOAD_ROOT, '', myfile.name.replace('"', '')), 'wb')
@@ -92,6 +124,11 @@ class UploadFile(APIView):
 		storagepath='./static/upload/'+myfile.name
 
 		im.save(storagepath)
+
+		# 修改头像地址
+		user = User.objects.get(id=int(uid))
+		user.img = myfile.name.replace('"', '')
+		user.save()
 
 		return Response({'filename': myfile.name.replace('"', '')})
 

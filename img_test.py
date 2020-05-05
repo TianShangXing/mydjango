@@ -27,9 +27,9 @@ import cv2
 # 读图
 img = cv2.imread('./static/upload/人物男头01.jpg')
 
-# 压缩png
+# 压缩png 压缩等级0-9
 # cv2.imwrite('./static/upload/人物男头02.png', img, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
-# 压缩jpg
+# 压缩jpg 压缩等级0-100
 cv2.imwrite('./static/upload/人物男头02.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 50])
 

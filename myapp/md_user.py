@@ -64,20 +64,21 @@ r = redis.Redis(host=host, port=port)
 # 又拍云上传
 import upyun
 # 定义文件上传类
-class UploadUp(View):
-	def post(self, request):
+class UploadUp(APIView):
+	def post(self,request):
+		# 获取文件
+		file = request.FILES.get('file')
+		# 新建又拍云实例    空间名称       操作员                 密码
+		up = upyun.UpYun('tianshangxing', 'xing', 'tTj32mkTmBeMoM9pUYo9AG5tuNx5f7fF')
+		# 声明头部信息
+		headers = {'x-gmkerl-rotate': 'auto'}
 
-		img = request.FILES.get('file')
+		# 上传图片
+		for chunk in file.chunks():
+			# 又拍云路径
+			res = up.put('test.jpg', chunk, checksum=True, headers=headers)
 
-		up = upyun.UpYun('tianshangxing', username='xing', password='b08ubGvsykcJeVB1fop7vJ1CYBUFsiFr')
-
-		headers = { 'x-gmkerl-rotate': '180' }
-
-		for chunk in img.chunks():
-			res = up.put('..\\static\\upload\\人物男头01.jpg', chunk, checksum=True, headers=headers)
-
-		#返回结果
-		return HttpResponse(json.dumps({'filename':img.name}), content_type='application/json')
+		return Response({'filename': file.name})
 
 # 七牛云token
 from qiniu import Auth

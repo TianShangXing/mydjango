@@ -61,6 +61,47 @@ port = 6379
 # 建立链接
 r = redis.Redis(host=host, port=port)
 
+from django.utils.decorators import method_decorator
+# 定义权限检测装饰器
+def my_decorator(func):
+	def wrapper(request, *args, **kwargs):
+
+		# 接收参数
+		uid = request.GET.get("uid", None)
+
+		myjwt = request.GET.get("jwt", None)
+
+		print(myjwt)
+
+		# 验证用户合法性
+		decode_jwt = jwt.decode(myjwt, 'xing', algorithms=['HS256'])
+
+		# 进行比对
+		if int(uid) != int(decode_jwt['uid']):
+
+			return Response({'code':401, 'message': '您的密钥无权限'})
+
+		return func(request, *args, **kwargs)
+
+	return wrapper
+
+# 获取用户信息接口
+class UserInfo(APIView):
+
+	@method_decorator(my_decorator)
+	def get(self, request):
+		# 接收参数
+		uid = request.GET.get('uid', None)
+
+		# 查询数据库
+		user = User.objects.get(id=int(uid))
+
+		if user.img == '':
+			user.img = 'sina.png'
+
+		# 返回
+		return Response({'img': user.img, 'phone': user.phone})
+
 # 又拍云上传
 import upyun
 # 定义文件上传类
@@ -305,10 +346,16 @@ class Login(APIView):
 			return Response({'code':403,'message':'您输入的验证码有误'})
 
 		# 查询数据 .get：查询不到报错 .filter：全表搜索，性能较慢
-		user = User.objects.filter(username=username, password=make_password(password)).first()
+		user = User.objects.filter(Q(username = username) | Q(phone = username), password=make_password(password)).first()
 
 		if user:
-			return Response({'code': 200, 'message': '登陆成功', 'uid': user.id, 'username': user.username})
+			# 生成用户token
+			encode_jwt = jwt.encode({'uid': user.id}, 'xing', algorithm='HS256')
+
+			# 转码
+			encode_str = str(encode_jwt, 'utf-8')
+
+			return Response({'code': 200, 'message': '登陆成功', 'uid': user.id, 'username': user.username, 'jwt': encode_str})
 
 		else:
 			return Response({'code':403, 'message': '用户名或密码错误'})

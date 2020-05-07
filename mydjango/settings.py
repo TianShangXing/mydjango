@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'mydjango.wsgi.application'
 DATABASES = {
    'default': {
           'ENGINE': 'django.db.backends.mysql', # 数据库引擎
-          'NAME': 'mdshop',                         # 数据库名
+          'NAME': 'md_shop',                    # 数据库名
           'USER': 'root',                       # 用户名
           'PASSWORD': '',                       # 密码
           'HOST': '',                           # 数据库主机，默认为localhost

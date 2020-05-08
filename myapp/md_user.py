@@ -54,12 +54,35 @@ import uuid
 # 导入redis数据库
 import redis
 
+from django.utils.deprecation import MiddlewareMixin
+
 # 定义ip和端口
 host = 'localhost'
 port = 6379
 
 # 建立链接
 r = redis.Redis(host=host, port=port)
+
+# 自定义中间件
+class MyMiddleware(MiddlewareMixin):
+	def process_request(self, request):
+		print('过滤中间件')
+		# if request.path_info.startswith('/userinfo/'):
+
+		# 	return JsonResponse({'message': '您篡改了uid'}, safe=False, json_dumps_params={'ensure_ascii': False, 'indent': 4})
+
+		# return HttpResponse(json.dumps({'message': '您篡改了uid'}, ensure_ascii=False, indent=4), content_type='application/json')
+		pass
+
+	def process_view(self, request, view_func, view_args, view_kwargs):
+		pass
+
+	def process_exception(self, request, exception):
+		pass
+
+	def process_response(self, request, response):
+		return response
+
 
 from django.utils.decorators import method_decorator
 # 定义权限检测装饰器

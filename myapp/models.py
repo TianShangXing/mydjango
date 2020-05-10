@@ -11,6 +11,18 @@ class Base(models.Model):
         # 允许继承
         abstract = True
 
+# 幻灯片
+class Carousel(Base):
+    name = models.CharField(max_length=200)
+
+    src = models.CharField(max_length=200)
+
+    img = models.CharField(max_length=200)
+
+    # 声明表名
+    class Meta:
+        db_table = 'carousel'
+
 # 用户表
 class User(Base):
     # 用户名

@@ -5,7 +5,10 @@ from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.views import View
 
 # 导入表
-from myapp.models import User
+from myapp.models import User, Carousel
+
+# 导入序列化
+from myapp.myser import CarouselSer
 
 import json
 from django.core.serializers import serialize
@@ -62,6 +65,17 @@ port = 6379
 
 # 建立链接
 r = redis.Redis(host=host, port=port)
+
+# 幻灯片后台接口
+class GetCarousel(APIView):
+	def get(self, request):
+		# 读库
+		carousels = Carousel.objects.all()
+
+		# 序列化操作
+		carousels_ser = CarouselSer(carousels, many=True)
+
+		return Response(carousels_ser.data)
 
 # 自定义中间件
 class MyMiddleware(MiddlewareMixin):

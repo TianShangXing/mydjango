@@ -12,7 +12,7 @@ up = upyun.UpYun('tianshangxing', 'xing', 'tTj32mkTmBeMoM9pUYo9AG5tuNx5f7fF')
 #     res = up.put('/upyun_test.png', f, checksum=True)
 
 # 创建文件夹
-# up.mkdir('/upyun_test/')
+# up.mkdir('/upyun_test')
 
 # 移动文件
 # up.move('/upyun_test.png', '/upyun_test/upyun_test.png')

@@ -11,6 +11,35 @@ class Base(models.Model):
         # 允许继承
         abstract = True
 
+class Category(Base):
+    name = models.CharField(max_length=200)
+
+    # 声明表名
+    class Meta:
+        db_table = 'category'
+
+# 商品表
+class Goods(Base):
+    name = models.CharField(max_length=200)
+
+    desc = models.CharField(max_length=200, null=True)
+
+    img = models.CharField(max_length=200, null=True)
+
+    video = models.CharField(max_length=200, null=True)
+
+    price = models.CharField(max_length=200)
+
+    params = models.CharField(max_length=200)
+    
+    flows = models.CharField(max_length=200, null=True)
+
+    cid = models.IntegerField(null=True)
+
+    # 声明表名
+    class Meta:
+        db_table = 'goods'
+
 # 幻灯片
 class Carousel(Base):
     name = models.CharField(max_length=200)

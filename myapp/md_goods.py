@@ -49,10 +49,10 @@ from django.db.models import Q,F
 from dwebsocket.decorators import accept_websocket
 import uuid
 
-from myapp.models import User, Carousel ,Goods, Category
+from myapp.models import User, Carousel, Goods, Category
 
 #导入序列化对象
-from myapp.myser import CarouselSer, CategorySer
+from myapp.myser import CarouselSer, CategorySer, GoodsSer
 
 #定义地址和端口
 host = '127.0.0.1'
@@ -60,6 +60,46 @@ port = 6379
 
 #建立redis连接
 r = redis.Redis(host=host,port=port)
+
+# 商品信息接口
+class GoodInfo(APIView):
+    def get(self, request):
+        id = request.GET.get('id', None)
+
+        # 查询数据
+        good = Goods.objects.get(id=id)
+
+        # 序列化操作
+        good_ser = GoodsSer(good)
+
+        return Response(good_ser.data)
+
+# 商品列表页
+class GoodsList(APIView):
+    def get(self, request):
+        # 当前页
+        page = request.GET.get('page', 1)
+
+        # 一页展示个数
+        size = request.GET.get('size', 1)
+
+        # 计算从哪切
+        data_start = (int(page) - 1) * int(size)
+
+        # 计算切到哪
+        data_end = int(page) * int(size)
+
+        # 查询
+        goods = Goods.objects.all()[data_start: data_end]
+
+        # 查询所有商品个数
+        count = Goods.objects.count()
+
+        # 序列化
+        goods_ser = GoodsSer(goods, many=True)
+
+        return Response({'data': goods_ser.data, 'total': count})
+
 
 # 商品分类接口
 class CategoryList(APIView):
@@ -80,6 +120,8 @@ class InsertGoods(APIView):
 
         params = request.GET.get('params', None)
 
+        cid = request.GET.get('cid', None)
+
         # 排重操作
         goods = Goods.objects.filter(name=name).first()
 
@@ -87,7 +129,7 @@ class InsertGoods(APIView):
             return Response({'code': 403, 'message': '您已经添加过了该商品'})
 
         # 入库
-        goods = Goods(name=name, price=price, params=params)
+        goods = Goods(name=name, price=price, params=params, cid=cid)
 
         goods.save()
 

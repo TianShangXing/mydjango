@@ -80,7 +80,7 @@ class GetCarousel(APIView):
 # 自定义中间件
 class MyMiddleware(MiddlewareMixin):
 	def process_request(self, request):
-		print('过滤中间件')
+		# print('过滤中间件')
 		# if request.path_info.startswith('/userinfo/'):
 
 		# 	return JsonResponse({'message': '您篡改了uid'}, safe=False, json_dumps_params={'ensure_ascii': False, 'indent': 4})

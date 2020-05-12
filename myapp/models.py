@@ -10,7 +10,8 @@ class Base(models.Model):
     class Meta:
         # 允许继承
         abstract = True
-
+        
+# 分类表
 class Category(Base):
     name = models.CharField(max_length=200)
 

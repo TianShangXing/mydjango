@@ -29,7 +29,7 @@ class Goods(Base):
 
     video = models.CharField(max_length=200, null=True)
 
-    price = models.CharField(max_length=200)
+    price = models.IntegerField()
 
     params = models.CharField(max_length=200)
     

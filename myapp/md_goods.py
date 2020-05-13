@@ -77,6 +77,12 @@ class GoodInfo(APIView):
 # 商品列表页
 class GoodsList(APIView):
     def get(self, request):
+        # 排序字段
+        coloum = request.GET.get('coloum', None)
+
+        # 排序方案
+        sort_order = request.GET.get('order', '')
+
         # 当前页
         page = request.GET.get('page', 1)
 
@@ -89,8 +95,12 @@ class GoodsList(APIView):
         # 计算切到哪
         data_end = int(page) * int(size)
 
-        # 查询
-        goods = Goods.objects.all()[data_start: data_end]
+        # 查询 切片操作
+        if coloum:
+            goods = Goods.objects.all().order_by(sort_order + coloum)[data_start: data_end]
+        
+        else:
+            goods = Goods.objects.all()[data_start: data_end]
 
         # 查询所有商品个数
         count = Goods.objects.count()

@@ -10,7 +10,17 @@ class Base(models.Model):
     class Meta:
         # 允许继承
         abstract = True
-        
+
+# 商品评论表
+class Comment(Base):
+	uid = models.IntegerField(null=True)
+	content = models.CharField(max_length=400)
+	gid = models.IntegerField(null=True)
+
+	#声明表名
+	class Meta:
+		db_table = "comment"
+
 # 分类表
 class Category(Base):
     name = models.CharField(max_length=200)
@@ -33,7 +43,7 @@ class Goods(Base):
 
     params = models.CharField(max_length=200)
     
-    flows = models.CharField(max_length=200, null=True)
+    flows = models.IntegerField(default=0, null=True)
 
     cid = models.IntegerField(null=True)
 

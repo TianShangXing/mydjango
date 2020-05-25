@@ -17,8 +17,8 @@ from django.contrib import admin
 from django.urls import path,re_path
 from django.views.static import serve
 from myapp.views import myindex
-from myapp.md_user import Register, Login, MyCode, wb_back, ding_back, UploadFile, QiNiu, UploadUp, UserInfo, GetCarousel
-from myapp.md_goods import InsertGoods, CategoryList, GoodsList, GoodInfo
+from myapp.md_user import Register, Login, MyCode, wb_back, ding_back, UploadFile, QiNiu, UploadUp, UserInfo, GetCarousel, GetUsers
+from myapp.md_goods import InsertGoods, CategoryList, GoodsList, GoodInfo, CommentInsert, CommentList
 
 urlpatterns = [
     # 定义超链接路由
@@ -37,4 +37,7 @@ urlpatterns = [
     path('categorylist/', CategoryList.as_view()),
     path('goodslist/', GoodsList.as_view()),
     path('goodinfo/', GoodInfo.as_view()),
+    path('commentinsert/', CommentInsert.as_view()),
+    path('commentlist/', CommentList.as_view()),
+    path('getusers/', GetUsers.as_view()),
 ]

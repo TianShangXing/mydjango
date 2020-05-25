@@ -25,11 +25,16 @@ r = redis.Redis(host=host, port=port)
 # 过期时间 单位是秒
 # r.expire("xing",30)
 
-# 打印过期时间
-print(r.ttl('xing'))
+print(r.ttl("xing"))
 
-# 打印列表长度
 print(r.llen("xing"))
 
-if r.llen("xing") > 5:
-	print('您的账号被锁定了')
+# 打印过期时间
+# print(r.ttl('xing'))
+# print(r.get('xing'))
+
+# 打印列表长度
+# print(r.llen("xing"))
+
+# if r.llen("xing") > 5:
+# 	print('您的账号被锁定了')

@@ -8,7 +8,7 @@ from django.views import View
 from myapp.models import User, Carousel
 
 # 导入序列化
-from myapp.myser import CarouselSer
+from myapp.myser import CarouselSer, UserSer
 
 import json
 from django.core.serializers import serialize
@@ -65,6 +65,16 @@ port = 6379
 
 # 建立链接
 r = redis.Redis(host=host, port=port)
+
+class GetUsers(View):
+
+	def get(self,request):
+
+		users = User.objects.filter().values('id','username')
+
+		users = list(users)
+
+		return JsonResponse(users,safe=False,json_dumps_params={'ensure_ascii':False})
 
 # 幻灯片后台接口
 class GetCarousel(APIView):
@@ -332,7 +342,7 @@ class MyCode(View):
 		my_font = ImageFont.truetype(font="c:\\Windows\\Fonts\\comic.ttf", size=25)
 		# 接收容器
 		code_str = ''
-		# 进入循环绘制
+		# 进入循环绘制0
 		for i in range(4):
 			# 获取字体颜色
 			text_color = self.get_random_color()

@@ -1,65 +1,120 @@
-from django.shortcuts import render,redirect
-#导包
-from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
-#导入类视图
+from django.shortcuts import render, redirect
+# 导包
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+# 导入类视图
 from django.views import View
 
 import json
 from django.core.serializers import serialize
 from rest_framework.response import Response
 from rest_framework.views import APIView
-#导入加密库
+# 导入加密库
 import hashlib
-#导入图片库
-#绘画库
+# 导入图片库
+# 绘画库
 from PIL import ImageDraw
-#字体库
+# 字体库
 from PIL import ImageFont
-#图片库
+# 图片库
 from PIL import Image
-#随机库
+# 随机库
 import random
-#文件流
+# 文件流
 import io
 
 import requests
 
-#导入上传文件夹配置
+# 导入上传文件夹配置
 from mydjango.settings import UPLOAD_ROOT
 import os
 
-#导入原生sql模块
+# 导入原生sql模块
 from django.db import connection
 
 import jwt
 
-#导入redis数据库
+# 导入redis数据库
 import redis
 
-#导入时间模块
+# 导入时间模块
 import time
 
-#导入公共目录变量
+# 导入公共目录变量
 from mydjango.settings import BASE_DIR
 
-#导包
-from django.db.models import Q,F
+# 导包
+from django.db.models import Q, F
 
-#导入dwebsocket的库
+# 导入dwebsocket的库
 from dwebsocket.decorators import accept_websocket
 import uuid
 
-from myapp.models import User, Carousel, Goods, Category
+from myapp.models import User, Carousel, Goods, Category, Comment
 
-#导入序列化对象
-from myapp.myser import CarouselSer, CategorySer, GoodsSer
+# 导入序列化对象
+from myapp.myser import CarouselSer, CategorySer, GoodsSer, CommentSer
 
-#定义地址和端口
+# 定义地址和端口
 host = '127.0.0.1'
 port = 6379
 
-#建立redis连接
-r = redis.Redis(host=host,port=port)
+# 建立redis连接
+r = redis.Redis(host=host, port=port)
+
+# 商品评论获取
+class CommentList(APIView):
+
+    def get(self, request):
+
+        gid = request.GET.get("gid", None)
+
+        # 查询数据
+        comments = Comment.objects.filter(gid=gid).order_by("-id")
+
+        # 序列化
+        comments_ser = CommentSer(comments, many=True)
+
+        return Response(comments_ser.data)
+
+# 商品评论
+class CommentInsert(APIView):
+    def post(self, request):
+
+        # 获取客户端ip
+        if 'HTTP_X_FORWARDED_FOR' in request.META:
+
+            ip = request.META.get('HTTP_X_FORWARDED_FOR')
+
+        else:
+
+            ip = request.META.get('REMOTE_ADDR')
+
+        # if r.get(ip):
+
+        try:
+            if r.llen(ip) > 3:
+
+                return Response({'code': 403, 'message': '您评论的过快，请歇一歇'})
+
+        except Exception as e:
+            pass
+
+        # 初始化参数
+        comment = CommentSer(data=request.data)
+
+        # 验证字段
+        if comment.is_valid():
+
+            # 进行入库
+            comment.save()
+
+            # 设置评论间隔时间
+            # r.set(ip,"123")
+
+            r.lpush(ip, 1)
+            r.expire(ip, 30)
+
+        return Response({'code': 200, 'message': '评论成功'})
 
 # 商品信息接口
 class GoodInfo(APIView):
@@ -73,6 +128,50 @@ class GoodInfo(APIView):
         good_ser = GoodsSer(good)
 
         return Response(good_ser.data)
+
+# 格式化结果集
+def dictfetch(cursor):
+
+	# 声明描述符
+	desc = cursor.description
+
+	return [ dict( zip([col[0] for col in desc ],row) ) 
+
+			for row in cursor.fetchall()
+	]
+
+# 搜索接口
+class Search(APIView):
+
+	def get(self,request):
+
+		# 检索字段
+		text = request.GET.get('text',None)
+
+		# 转换数据类型
+		text = json.loads(text)
+
+		sql = ""
+        
+		# 动态拼接
+		for val in text:
+			sql += "or name like '%%%s%%' " % val
+
+		sql = sql.lstrip("or")
+
+		sql_cursor = "select name,id,img,price from goods where id != 0 and ( " + sql + ")"
+
+		# 建立游标对象
+		cursor = connection.cursor()
+
+		# 执行sql
+		cursor.execute(sql_cursor)
+
+		# 查询
+		#result_tuple = cursor.fetchall()
+		result = dictfetch(cursor)
+
+		return Response({'data':result})
 
 # 商品列表页
 class GoodsList(APIView):
@@ -102,16 +201,19 @@ class GoodsList(APIView):
 
         # 查询 切片操作
         if coloum:
-            goods = Goods.objects.all().order_by(sort_order + coloum)[data_start: data_end]
-        
+            goods = Goods.objects.all().order_by(
+                sort_order + coloum)[data_start: data_end]
+
         else:
             goods = Goods.objects.all()[data_start: data_end]
 
         # 判断是否进行模糊查询
         if text:
-            goods = Goods.objects.filter(Q(name__contains=text) | Q(desc__contains=text))[data_start: data_end]
+            goods = Goods.objects.filter(Q(name__contains=text) | Q(desc__contains=text))[
+                data_start: data_end]
 
-            count = Goods.objects.filter(Q(name__contains=text) | Q(desc__contains=text)).count()
+            count = Goods.objects.filter(
+                Q(name__contains=text) | Q(desc__contains=text)).count()
 
         else:
             # 查询所有商品个数
